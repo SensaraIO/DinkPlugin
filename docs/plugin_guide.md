@@ -290,22 +290,7 @@ Here are some general tips and best practices for building a server application 
     ```
 
 *   **Data Validation and Error Handling:**
-    *   While the `json-examples.md` provides a good contract, it's wise to implement basic validation. Check for the presence of key fields you expect, especially within the `extra` object for the types you care about.
+    *   It's wise to implement basic validation. Check for the presence of key fields you expect, especially within the `extra` object for the types you care about.
     *   Handle potential parsing errors (e.g., malformed JSON in `payload_json`, though unlikely from the plugin itself).
     *   Log errors gracefully. If your webhook endpoint encounters an issue, returning an appropriate HTTP error code (e.g., `400 Bad Request` for invalid data, `500 Internal Server Error` for server-side issues) can be helpful for debugging, though the plugin might not do anything specific with these responses.
     *   Consider that some fields are optional (e.g., `killCount` in loot, `party` in loot). Your code should be resilient to their absence if they are not critical for your use case.
-
-*   **Security Considerations:**
-    *   If your webhook URL is publicly accessible, consider implementing a mechanism to verify that incoming requests are genuinely from the Dink plugin or authorized users. This could be a secret token shared between the plugin configuration and your server, passed as a query parameter or a custom header (though Dink doesn't explicitly support adding custom headers to webhook requests out-of-the-box beyond the standard `multipart/form-data` structure). *Currently, the primary way to identify a user is via `dinkAccountHash`.*
-    *   Be mindful of rate limiting if you expect a high volume of notifications or want to protect against potential (though unlikely) abuse.
-
-*   **Asynchronous Processing:**
-    *   For notifications that might trigger time-consuming tasks on your server (e.g., database writes, external API calls), consider processing them asynchronously. Your webhook endpoint could quickly acknowledge the request (e.g., send a `200 OK` or `202 Accepted` response) and then pass the data to a background worker or message queue. This prevents the Dink plugin from timing out while waiting for your server.
-
-*   **Idempotency (If Applicable):**
-    *   In distributed systems, webhook events can sometimes be delivered more than once. If the actions your server takes are not naturally idempotent (i.e., performing them multiple times has a different effect than performing them once), you might need to implement a way to detect and discard duplicate notifications. The `dinkAccountHash` along with a timestamp or a unique event identifier (if one were available in the payload, which is not explicitly the case here beyond the content itself) could be used for this. *Given the current payload, true idempotency might be tricky without deriving a unique key from the event content.*
-
-*   **Refer to `json-examples.md`:**
-    *   Keep the `docs/json-examples.md` document handy. It's the source of truth for the data structures.
-
-By following these guidelines, you can build a robust and reliable server application to handle webhook notifications from the Dink plugin.
